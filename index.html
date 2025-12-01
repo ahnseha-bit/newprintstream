@@ -3,188 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>newprintstream</title>
+    <title>newprintstream (2025 Updated)</title>
     <style>
-        :root { 
-            --bg: #111; 
-            --text: #eee; 
-            --accent: #00ff88; 
-            --star-color: #f1c40f;
-            --border: #222;
-            --nav-bg: #1a1a1a;
-        }
+        /* 기존 스타일 그대로 유지 */
+        :root { --bg: #111; --text: #eee; --accent: #00ff88; --star-color: #f1c40f; --border: #222; --nav-bg: #1a1a1a; }
+        html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; overflow: hidden; }
+        #app-container { display: flex; flex-direction: column; height: 100vh; max-width: 1000px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; position: relative; }
         
-        html, body {
-            height: 100%; margin: 0; padding: 0;
-            background: var(--bg); color: var(--text);
-            font-family: 'Pretendard', sans-serif;
-            overflow: hidden; 
-        }
-
-        #app-container {
-            display: flex; flex-direction: column;
-            height: 100vh; max-width: 1000px;
-            margin: 0 auto; padding: 0 20px;
-            box-sizing: border-box; position: relative;
-        }
-        
-        /* --- 헤더 --- */
-        header { 
-            flex: 0 0 60px; display: flex; align-items: center; 
-            border-bottom: 2px solid #333; margin-bottom: 10px;
-            justify-content: space-between;
-        }
-        
-        .header-left { 
-            font-weight: 800; font-size: 1.2rem;
-            letter-spacing: -0.5px; font-family: 'Courier New', monospace; 
-        }
-        
-        /* PC용 상단 메뉴 */
-        .header-controls { 
-            display: flex; gap: 8px; align-items: center; 
-        }
-        
-        .control-btn { 
-            color: #888; cursor: pointer; text-decoration: underline; 
-            font-size: 0.8rem; padding: 5px;
-        }
+        header { flex: 0 0 60px; display: flex; align-items: center; border-bottom: 2px solid #333; margin-bottom: 10px; justify-content: space-between; }
+        .header-left { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; font-family: 'Courier New', monospace; }
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        .control-btn { color: #888; cursor: pointer; text-decoration: underline; font-size: 0.8rem; padding: 5px; }
         .control-btn:hover { color: #fff; }
 
-        .btn-pill {
-            background: #222; border: 1px solid #444;
-            padding: 6px 12px; border-radius: 20px;
-            cursor: pointer; font-size: 0.8rem;
-            display: flex; align-items: center; gap: 5px;
-            transition: 0.2s; color: #ccc;
-        }
+        .btn-pill { background: #222; border: 1px solid #444; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; color: #ccc; }
         .btn-pill:hover { background: #333; border-color: #666; color: #fff; }
         .btn-pill.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
         .btn-pill.pause-active { background: #ff4757; color: white; border-color: #ff4757; }
 
-        /* --- 하단 네비게이션 (모바일 전용) --- */
-        .mobile-nav {
-            display: none; /* PC에선 숨김 */
-            position: fixed; bottom: 0; left: 0; right: 0;
-            height: 65px; background: var(--nav-bg);
-            border-top: 1px solid #333;
-            justify-content: space-around; align-items: center;
-            z-index: 1000; padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #888; font-size: 0.7rem; gap: 4px;
-            width: 20%; height: 100%; cursor: pointer;
-        }
+        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--nav-bg); border-top: 1px solid #333; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 0.7rem; gap: 4px; width: 20%; height: 100%; cursor: pointer; }
         .nav-item i { font-size: 1.4rem; font-style: normal; margin-bottom: 2px; }
         .nav-item.active { color: var(--accent); font-weight: bold; }
         .nav-item.paused { color: #ff4757; }
 
-        /* --- 상태 표시줄 --- */
-        #status-area {
-            flex: 0 0 auto; min-height: 24px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 10px;
-        }
+        #status-area { flex: 0 0 auto; min-height: 24px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         #status-msg { color: #888; font-size: 0.85rem; }
-        .loader {
-            width: 14px; height: 14px;
-            border: 2px solid #333; border-bottom-color: var(--accent);
-            border-radius: 50%; display: inline-block;
-            box-sizing: border-box; animation: rotation 1s linear infinite;
-        }
+        .loader { width: 14px; height: 14px; border: 2px solid #333; border-bottom-color: var(--accent); border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* --- 뉴스 리스트 --- */
-        #news-stream { 
-            flex: 1 1 auto; overflow-y: scroll; 
-            padding-right: 5px; min-height: 0; padding-bottom: 20px;
-        }
+        #news-stream { flex: 1 1 auto; overflow-y: scroll; padding-right: 5px; min-height: 0; padding-bottom: 20px; }
         #news-stream::-webkit-scrollbar { width: 6px; }
         #news-stream::-webkit-scrollbar-track { background: #1a1a1a; }
         #news-stream::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
-        .news-item { 
-            display: flex; align-items: flex-start; 
-            padding: 14px 0; border-bottom: 1px solid var(--border); 
-            font-size: 1.15rem; animation: slideIn 0.3s ease-out; 
-            line-height: 1.4;
-        }
-        
-        .source-badge { 
-            font-size: 0.65rem; font-weight: bold; padding: 3px 6px; 
-            border-radius: 4px; margin-right: 10px; min-width: 60px; 
-            text-align: center; color: #000; text-transform: uppercase;
-            margin-top: 4px; flex-shrink: 0;
-        }
-        
-        .title-link { 
-            flex: 1; color: inherit; text-decoration: none; 
-            font-weight: 500; word-break: keep-all; margin-right: 8px;
-        }
-        
-        .star-btn {
-            background: none; border: none; color: #444;
-            font-size: 1.4rem; cursor: pointer; padding: 0 10px;
-            line-height: 1;
-        }
+        .news-item { display: flex; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 1.15rem; animation: slideIn 0.3s ease-out; line-height: 1.4; }
+        .source-badge { font-size: 0.65rem; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-right: 10px; min-width: 60px; text-align: center; color: #000; text-transform: uppercase; margin-top: 4px; flex-shrink: 0; }
+        .title-link { flex: 1; color: inherit; text-decoration: none; font-weight: 500; word-break: keep-all; margin-right: 8px; }
+        .star-btn { background: none; border: none; color: #444; font-size: 1.4rem; cursor: pointer; padding: 0 10px; line-height: 1; }
         .star-btn.saved { color: var(--star-color); }
 
-        /* 패널 (설정/북마크) */
-        .slide-panel {
-            position: absolute; top: 0; bottom: 0; right: 0; left: 0;
-            background: rgba(0,0,0,0.96); z-index: 2000;
-            padding: 20px; overflow-y: auto; display: none;
-            backdrop-filter: blur(5px);
-            padding-top: 80px; /* 헤더 공간 확보 */
-        }
+        .slide-panel { position: absolute; top: 0; bottom: 0; right: 0; left: 0; background: rgba(0,0,0,0.96); z-index: 2000; padding: 20px; overflow-y: auto; display: none; backdrop-filter: blur(5px); padding-top: 80px; }
         .slide-panel.open { display: block; }
-        
-        .panel-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 60px;
-            background: #111; border-bottom: 1px solid #333;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 2001;
-            font-size: 1.1rem; font-weight: bold; color: var(--accent);
-        }
-        
-        .channel-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;
-            padding-bottom: 80px; /* 하단 가림 방지 */
-        }
-        .channel-item {
-            background: #222; border: 1px solid #444;
-            padding: 12px; border-radius: 8px; cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            font-size: 0.9rem; user-select: none;
-        }
+        .panel-header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #111; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 2001; font-size: 1.1rem; font-weight: bold; color: var(--accent); }
+        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding-bottom: 80px; }
+        .channel-item { background: #222; border: 1px solid #444; padding: 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; user-select: none; }
         .channel-item.checked { border-color: var(--accent); background: #1a2e25; }
-        .channel-item .indicator {
-            width: 8px; height: 8px; border-radius: 50%; background: #444;
-        }
+        .channel-item .indicator { width: 8px; height: 8px; border-radius: 50%; background: #444; }
         .channel-item.checked .indicator { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
-        /* 로그인창 */
         #login-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { text-align: center; width: 85%; max-width: 400px; padding: 20px; }
         input { width: 100%; padding: 15px; margin-top: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
         button.start-btn { width: 100%; margin-top: 15px; padding: 12px 0; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .api-guide { margin-top: 25px; font-size: 0.9rem; color: #888; line-height: 1.6; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; }
         .api-guide a { color: var(--accent); text-decoration: none; font-weight: bold; display: block; margin-top: 5px; }
-
         .hidden { display: none !important; }
         .empty-msg { color: #666; text-align: center; margin-top: 50px; }
-
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 📱 모바일 미디어 쿼리 */
-        @media (max-width: 768px) {
-            .header-controls { display: none; } /* 상단 메뉴 숨김 */
-            .mobile-nav { display: flex; } /* 하단 메뉴 보임 */
-            #app-container { padding-bottom: 70px; } /* 하단 여백 확보 */
-            #news-stream { padding-bottom: 0; }
-            .news-item { font-size: 1.05rem; } /* 모바일 폰트 조절 */
-        }
+        @media (max-width: 768px) { .header-controls { display: none; } .mobile-nav { display: flex; } #app-container { padding-bottom: 70px; } #news-stream { padding-bottom: 0; } .news-item { font-size: 1.05rem; } }
     </style>
 </head>
 <body>
@@ -192,7 +69,7 @@
     <div id="login-layer">
         <div class="login-box">
             <h2 style="margin-bottom: 5px; font-family: 'Courier New', monospace;">newprintstream</h2>
-            <p style="color:#666; font-size:0.9rem; margin-top:0;">Real-time Knowledge Ticker</p>
+            <p style="color:#666; font-size:0.9rem; margin-top:0;">2025 Live Edition</p>
             <input type="password" id="api-input" placeholder="Gemini API Key 입력">
             <button class="start-btn" onclick="saveAndStart()">입장하기</button>
             <div class="api-guide">
@@ -223,53 +100,31 @@
         <div id="news-stream"></div>
 
         <nav class="mobile-nav">
-            <div class="nav-item" onclick="resetKey()">
-                <i>🔑</i>
-                <span>키재설정</span>
-            </div>
-            <div class="nav-item" onclick="clearStream()">
-                <i>🧹</i>
-                <span>비우기</span>
-            </div>
-            <div class="nav-item" id="mobile-pause-btn" onclick="togglePause()">
-                <i>⏸</i>
-                <span>일시정지</span>
-            </div>
-            <div class="nav-item" onclick="togglePanel('bookmark')">
-                <i>★</i>
-                <span id="bookmark-count-mobile">북마크</span>
-            </div>
-            <div class="nav-item" onclick="togglePanel('settings')">
-                <i>⚙</i>
-                <span>채널</span>
-            </div>
+            <div class="nav-item" onclick="resetKey()"><i>🔑</i><span>키재설정</span></div>
+            <div class="nav-item" onclick="clearStream()"><i>🧹</i><span>비우기</span></div>
+            <div class="nav-item" id="mobile-pause-btn" onclick="togglePause()"><i>⏸</i><span>일시정지</span></div>
+            <div class="nav-item" onclick="togglePanel('bookmark')"><i>★</i><span id="bookmark-count-mobile">북마크</span></div>
+            <div class="nav-item" onclick="togglePanel('settings')"><i>⚙</i><span>채널</span></div>
         </nav>
 
         <div id="bookmark-panel" class="slide-panel">
-            <div class="panel-header">
-                <span style="color:var(--star-color)">★ 북마크 보관함</span>
-                <span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('bookmark')">×</span>
-            </div>
+            <div class="panel-header"><span style="color:var(--star-color)">★ 북마크 보관함</span><span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('bookmark')">×</span></div>
             <div id="bookmark-list"></div>
         </div>
 
         <div id="settings-panel" class="slide-panel">
-            <div class="panel-header">
-                <span>⚙ 채널 필터</span>
-                <span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('settings')">×</span>
-            </div>
+            <div class="panel-header"><span>⚙ 채널 필터</span><span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('settings')">×</span></div>
             <div class="channel-grid" id="channel-list"></div>
         </div>
     </div>
 
     <script>
+        // 🔴 에러 나는 사이트(422) 제거 + 안전한 소스만 남김
         const RSS_SOURCES = [
-            { name: 'Newsarama', url: 'https://www.gamesradar.com/rss/newsarama/', color: '#e056fd' }, 
             { name: 'CBR', url: 'https://www.cbr.com/feed/', color: '#badc58' }, 
             { name: 'IGN', url: 'http://feeds.ign.com/ign/news', color: '#eb4d4b' }, 
             { name: 'Kotaku', url: 'https://kotaku.com/rss', color: '#ffeaa7' }, 
             { name: 'Anime', url: 'https://www.animenewsnetwork.com/news/rss.xml', color: '#e84393' }, 
-            { name: 'Famitsu', url: 'https://www.famitsu.com/rss/fcom_all.xml', color: '#38ada9' }, 
             { name: 'Natalie', url: 'https://natalie.mu/comic/feed/news', color: '#e55039' }, 
             { name: 'Siliconera', url: 'https://www.siliconera.com/feed/', color: '#a29bfe' }, 
             { name: 'SoraNews', url: 'https://soranews24.com/feed/', color: '#00cec9' }, 
@@ -286,13 +141,11 @@
             { name: 'Verge', url: 'https://www.theverge.com/rss/index.xml', color: '#5f27cd' },
             { name: 'NASA', url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', color: '#273c75' },
             { name: 'Science', url: 'https://www.sciencedaily.com/rss/top/science.xml', color: '#3498db' },
-            { name: 'Hypebeast', url: 'https://hypebeast.com/feeds/rss', color: '#34495e' },
-            { name: 'Recipe', url: 'https://www.allrecipes.com/syndication/atom.xml', color: '#feca57' },
             { name: 'Living', url: 'https://www.apartmenttherapy.com/main.rss', color: '#1dd1a1' }
         ];
 
         let API_KEY = "";
-        let SELECTED_MODEL = "gemini-1.5-flash"; // 💡 안전빵 모델 강제 고정
+        let SELECTED_MODEL = "gemini-2.5-flash"; // 💡 2025년 기준 최신 표준 모델
         let newsQueue = [];
         let processedTitles = new Set();
         let bookmarks = []; 
@@ -322,7 +175,9 @@
             
             loadBookmarks(); 
             initChannelSettings(); 
-            await findBestModel();
+            
+            // 모델 탐색 과정 없이 바로 2.5 Flash 사용 (에러 원인 차단)
+            setLoading(true, "시스템 연결 중...");
             startScheduler();
         }
 
@@ -391,7 +246,6 @@
         }
 
         function updateBookmarkCount() {
-            // PC & 모바일 둘 다 업데이트
             const count = `(${bookmarks.length})`;
             document.getElementById('bookmark-count-pc').innerText = count;
             document.getElementById('bookmark-count-mobile').innerText = "북마크 " + count;
@@ -452,9 +306,7 @@
                 clearInterval(fetchTimer); clearInterval(renderTimer);
                 fetchTimer = null; renderTimer = null;
                 
-                // PC 버튼 업데이트
                 pcBtn.innerHTML = "▶"; pcBtn.classList.add('pause-active');
-                // 모바일 버튼 업데이트
                 mobileBtn.innerHTML = "<i>▶</i><span>재생</span>"; mobileBtn.classList.add('paused');
                 
                 statusMsg.innerText = "⏸ 멈춤: 천천히 읽어보세요.";
@@ -490,21 +342,10 @@
             if(text) msg.innerText = text;
         }
 
-        // 💡 [수정됨] 친구 접속 불가 문제 해결 (1.5 Flash 강제 고정)
-        async function findBestModel() {
-            setLoading(true, "서버 연결 중...");
-            
-            // 기존의 모델 리스트 조회(fetch) 부분을 제거하고 바로 Flash로 설정
-            SELECTED_MODEL = "gemini-1.5-flash";
-            
-            // 잠깐의 로딩 효과만 주고 바로 성공 처리
-            setTimeout(() => {
-                setLoading(false, "연결됨: Flash Model");
-            }, 800);
-        }
-
         async function callGeminiDirect(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${SELECTED_MODEL}:generateContent?key=${API_KEY}`;
+            // 💡 2025년 기준, 무료 유저에게 가장 안전한 2.5-flash 모델 지정
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -536,7 +377,7 @@
         }
 
         async function translateAndQueue() {
-            if (!SELECTED_MODEL || isPaused) return; 
+            if (isPaused) return; 
             
             if(activeChannels.size === 0) {
                 setLoading(false, "선택된 채널이 없습니다.");
@@ -592,11 +433,12 @@
                             processedTitles.add(originalItem.title);
                         }
                     });
-                    setLoading(false, "");
+                    setLoading(false, ""); // 성공 시 로딩 숨김
                 } 
             } catch (error) {
                 console.error(error);
                 let errorMsg = "일시적 수신 지연";
+                // 429 에러(한도초과) 감지 시 메시지 표시
                 if(error.message && (error.message.includes('429') || error.message.includes('Quota'))) {
                     errorMsg = "⚠️ API 한도 초과 (잠시 대기)";
                 }
