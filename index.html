@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>newprintstream</title>
+    <style>
+        :root { 
+            --bg: #111; 
+            --text: #eee; 
+            --accent: #00ff88; 
+            --star-color: #f1c40f;
+            --border: #222;
+            --nav-bg: #1a1a1a;
+        }
+        
+        html, body {
+            height: 100%; margin: 0; padding: 0;
+            background: var(--bg); color: var(--text);
+            font-family: 'Pretendard', sans-serif;
+            overflow: hidden; 
+        }
+
+        #app-container {
+            display: flex; flex-direction: column;
+            height: 100vh; max-width: 1000px;
+            margin: 0 auto; padding: 0 20px;
+            box-sizing: border-box; position: relative;
+        }
+        
+        /* --- 헤더 --- */
+        header { 
+            flex: 0 0 60px; display: flex; align-items: center; 
+            border-bottom: 2px solid #333; margin-bottom: 10px;
+            justify-content: space-between;
+        }
+        
+        .header-left { 
+            font-weight: 800; font-size: 1.2rem;
+            letter-spacing: -0.5px; font-family: 'Courier New', monospace; 
+        }
+        
+        /* PC용 상단 메뉴 */
+        .header-controls { 
+            display: flex; gap: 8px; align-items: center; 
+        }
+        
+        .control-btn { 
+            color: #888; cursor: pointer; text-decoration: underline; 
+            font-size: 0.8rem; padding: 5px;
+        }
+        .control-btn:hover { color: #fff; }
+
+        .btn-pill {
+            background: #222; border: 1px solid #444;
+            padding: 6px 12px; border-radius: 20px;
+            cursor: pointer; font-size: 0.8rem;
+            display: flex; align-items: center; gap: 5px;
+            transition: 0.2s; color: #ccc;
+        }
+        .btn-pill:hover { background: #333; border-color: #666; color: #fff; }
+        .btn-pill.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
+        .btn-pill.pause-active { background: #ff4757; color: white; border-color: #ff4757; }
+
+        /* --- 하단 네비게이션 (모바일 전용) --- */
+        .mobile-nav {
+            display: none; /* PC에선 숨김 */
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 65px; background: var(--nav-bg);
+            border-top: 1px solid #333;
+            justify-content: space-around; align-items: center;
+            z-index: 1000; padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #888; font-size: 0.7rem; gap: 4px;
+            width: 20%; height: 100%; cursor: pointer;
+        }
+        .nav-item i { font-size: 1.4rem; font-style: normal; margin-bottom: 2px; }
+        .nav-item.active { color: var(--accent); font-weight: bold; }
+        .nav-item.paused { color: #ff4757; }
+
+        /* --- 상태 표시줄 --- */
+        #status-area {
+            flex: 0 0 auto; min-height: 24px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #status-msg { color: #888; font-size: 0.85rem; }
+        .loader {
+            width: 14px; height: 14px;
+            border: 2px solid #333; border-bottom-color: var(--accent);
+            border-radius: 50%; display: inline-block;
+            box-sizing: border-box; animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* --- 뉴스 리스트 --- */
+        #news-stream { 
+            flex: 1 1 auto; overflow-y: scroll; 
+            padding-right: 5px; min-height: 0; padding-bottom: 20px;
+        }
+        #news-stream::-webkit-scrollbar { width: 6px; }
+        #news-stream::-webkit-scrollbar-track { background: #1a1a1a; }
+        #news-stream::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+        .news-item { 
+            display: flex; align-items: flex-start; 
+            padding: 14px 0; border-bottom: 1px solid var(--border); 
+            font-size: 1.15rem; animation: slideIn 0.3s ease-out; 
+            line-height: 1.4;
+        }
+        
+        .source-badge { 
+            font-size: 0.65rem; font-weight: bold; padding: 3px 6px; 
+            border-radius: 4px; margin-right: 10px; min-width: 60px; 
+            text-align: center; color: #000; text-transform: uppercase;
+            margin-top: 4px; flex-shrink: 0;
+        }
+        
+        .title-link { 
+            flex: 1; color: inherit; text-decoration: none; 
+            font-weight: 500; word-break: keep-all; margin-right: 8px;
+        }
+        
+        .star-btn {
+            background: none; border: none; color: #444;
+            font-size: 1.4rem; cursor: pointer; padding: 0 10px;
+            line-height: 1;
+        }
+        .star-btn.saved { color: var(--star-color); }
+
+        /* 패널 (설정/북마크) */
+        .slide-panel {
+            position: absolute; top: 0; bottom: 0; right: 0; left: 0;
+            background: rgba(0,0,0,0.96); z-index: 2000;
+            padding: 20px; overflow-y: auto; display: none;
+            backdrop-filter: blur(5px);
+            padding-top: 80px; /* 헤더 공간 확보 */
+        }
+        .slide-panel.open { display: block; }
+        
+        .panel-header { 
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: #111; border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 2001;
+            font-size: 1.1rem; font-weight: bold; color: var(--accent);
+        }
+        
+        .channel-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;
+            padding-bottom: 80px; /* 하단 가림 방지 */
+        }
+        .channel-item {
+            background: #222; border: 1px solid #444;
+            padding: 12px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; user-select: none;
+        }
+        .channel-item.checked { border-color: var(--accent); background: #1a2e25; }
+        .channel-item .indicator {
+            width: 8px; height: 8px; border-radius: 50%; background: #444;
+        }
+        .channel-item.checked .indicator { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+
+        /* 로그인창 */
+        #login-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { text-align: center; width: 85%; max-width: 400px; padding: 20px; }
+        input { width: 100%; padding: 15px; margin-top: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        button.start-btn { width: 100%; margin-top: 15px; padding: 12px 0; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .api-guide { margin-top: 25px; font-size: 0.9rem; color: #888; line-height: 1.6; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .api-guide a { color: var(--accent); text-decoration: none; font-weight: bold; display: block; margin-top: 5px; }
+
+        .hidden { display: none !important; }
+        .empty-msg { color: #666; text-align: center; margin-top: 50px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 📱 모바일 미디어 쿼리 */
+        @media (max-width: 768px) {
+            .header-controls { display: none; } /* 상단 메뉴 숨김 */
+            .mobile-nav { display: flex; } /* 하단 메뉴 보임 */
+            #app-container { padding-bottom: 70px; } /* 하단 여백 확보 */
+            #news-stream { padding-bottom: 0; }
+            .news-item { font-size: 1.05rem; } /* 모바일 폰트 조절 */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-layer">
+        <div class="login-box">
+            <h2 style="margin-bottom: 5px; font-family: 'Courier New', monospace;">newprintstream</h2>
+            <p style="color:#666; font-size:0.9rem; margin-top:0;">Real-time Knowledge Ticker</p>
+            <input type="password" id="api-input" placeholder="Gemini API Key 입력">
+            <button class="start-btn" onclick="saveAndStart()">입장하기</button>
+            <div class="api-guide">
+                API 키가 없으신가요?<br>
+                구글에서 무료로 발급받을 수 있습니다.
+                <a href="https://aistudio.google.com/app/apikey" target="_blank">🔑 1분 만에 키 발급받기 (무료)</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        <header>
+            <div class="header-left">newprintstream</div>
+            <div class="header-controls">
+                <div class="btn-pill" id="pause-btn-pc" onclick="togglePause()">⏸</div>
+                <div class="btn-pill" onclick="togglePanel('bookmark')">★ 북마크 <span id="bookmark-count-pc">(0)</span></div>
+                <div class="btn-pill" onclick="togglePanel('settings')">⚙ 채널</div>
+                <span class="control-btn" onclick="clearStream()">비우기</span>
+                <span class="control-btn" onclick="resetKey()">키 재설정</span>
+            </div>
+        </header>
+
+        <div id="status-area">
+            <div id="loader-icon" class="loader hidden"></div>
+            <div id="status-msg">준비 중...</div>
+        </div>
+        
+        <div id="news-stream"></div>
+
+        <nav class="mobile-nav">
+            <div class="nav-item" onclick="resetKey()">
+                <i>🔑</i>
+                <span>키재설정</span>
+            </div>
+            <div class="nav-item" onclick="clearStream()">
+                <i>🧹</i>
+                <span>비우기</span>
+            </div>
+            <div class="nav-item" id="mobile-pause-btn" onclick="togglePause()">
+                <i>⏸</i>
+                <span>일시정지</span>
+            </div>
+            <div class="nav-item" onclick="togglePanel('bookmark')">
+                <i>★</i>
+                <span id="bookmark-count-mobile">북마크</span>
+            </div>
+            <div class="nav-item" onclick="togglePanel('settings')">
+                <i>⚙</i>
+                <span>채널</span>
+            </div>
+        </nav>
+
+        <div id="bookmark-panel" class="slide-panel">
+            <div class="panel-header">
+                <span style="color:var(--star-color)">★ 북마크 보관함</span>
+                <span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('bookmark')">×</span>
+            </div>
+            <div id="bookmark-list"></div>
+        </div>
+
+        <div id="settings-panel" class="slide-panel">
+            <div class="panel-header">
+                <span>⚙ 채널 필터</span>
+                <span style="font-size:1.5rem; cursor:pointer;" onclick="togglePanel('settings')">×</span>
+            </div>
+            <div class="channel-grid" id="channel-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const RSS_SOURCES = [
+            { name: 'Newsarama', url: 'https://www.gamesradar.com/rss/newsarama/', color: '#e056fd' }, 
+            { name: 'CBR', url: 'https://www.cbr.com/feed/', color: '#badc58' }, 
+            { name: 'IGN', url: 'http://feeds.ign.com/ign/news', color: '#eb4d4b' }, 
+            { name: 'Kotaku', url: 'https://kotaku.com/rss', color: '#ffeaa7' }, 
+            { name: 'Anime', url: 'https://www.animenewsnetwork.com/news/rss.xml', color: '#e84393' }, 
+            { name: 'Famitsu', url: 'https://www.famitsu.com/rss/fcom_all.xml', color: '#38ada9' }, 
+            { name: 'Natalie', url: 'https://natalie.mu/comic/feed/news', color: '#e55039' }, 
+            { name: 'Siliconera', url: 'https://www.siliconera.com/feed/', color: '#a29bfe' }, 
+            { name: 'SoraNews', url: 'https://soranews24.com/feed/', color: '#00cec9' }, 
+            { name: 'NFL', url: 'https://www.cbssports.com/rss/headlines/nfl/', color: '#e67e22' },
+            { name: 'ESPN NFL', url: 'https://www.espn.com/espn/rss/nfl/news', color: '#d35400' },
+            { name: 'Sports', url: 'https://www.cbssports.com/rss/headlines/', color: '#f39c12' },
+            { name: 'EPL', url: 'https://www.skysports.com/rss/12040', color: '#ee5253' }, 
+            { name: 'NBA', url: 'https://www.espn.com/espn/rss/nba/news', color: '#f1c40f' }, 
+            { name: 'BBC', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', color: '#ff4757' },
+            { name: 'CNN', url: 'http://rss.cnn.com/rss/edition_world.rss', color: '#ff6b81' },
+            { name: 'CNBC', url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', color: '#16a085' },
+            { name: 'TechCrunch', url: 'https://techcrunch.com/feed/', color: '#2ecc71' },
+            { name: 'Wired', url: 'https://www.wired.com/feed/rss', color: '#00d2d3' },
+            { name: 'Verge', url: 'https://www.theverge.com/rss/index.xml', color: '#5f27cd' },
+            { name: 'NASA', url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', color: '#273c75' },
+            { name: 'Science', url: 'https://www.sciencedaily.com/rss/top/science.xml', color: '#3498db' },
+            { name: 'Hypebeast', url: 'https://hypebeast.com/feeds/rss', color: '#34495e' },
+            { name: 'Recipe', url: 'https://www.allrecipes.com/syndication/atom.xml', color: '#feca57' },
+            { name: 'Living', url: 'https://www.apartmenttherapy.com/main.rss', color: '#1dd1a1' }
+        ];
+
+        let API_KEY = "";
+        let SELECTED_MODEL = "";
+        let newsQueue = [];
+        let processedTitles = new Set();
+        let bookmarks = []; 
+        let activeChannels = new Set(); 
+        let fetchTimer = null;
+        let renderTimer = null;
+        let isPaused = false; 
+
+        function saveAndStart() {
+            const key = document.getElementById('api-input').value.trim();
+            if(!key) return alert("키를 입력해주세요!");
+            localStorage.setItem("my_gemini_key", key); 
+            startApp(key);
+        }
+
+        function resetKey() {
+            if(confirm("저장된 키를 삭제하고 다시 입력하시겠습니까?")) {
+                localStorage.removeItem("my_gemini_key");
+                location.reload();
+            }
+        }
+
+        async function startApp(key) {
+            API_KEY = key;
+            document.getElementById('login-layer').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            
+            loadBookmarks(); 
+            initChannelSettings(); 
+            await findBestModel();
+            startScheduler();
+        }
+
+        function initChannelSettings() {
+            const savedChannels = localStorage.getItem("my_active_channels");
+            if(savedChannels) {
+                activeChannels = new Set(JSON.parse(savedChannels));
+            } else {
+                RSS_SOURCES.forEach(s => activeChannels.add(s.name));
+            }
+            renderChannelGrid();
+        }
+
+        function toggleChannel(name) {
+            if(activeChannels.has(name)) activeChannels.delete(name);
+            else activeChannels.add(name);
+            localStorage.setItem("my_active_channels", JSON.stringify([...activeChannels]));
+            renderChannelGrid();
+        }
+
+        function renderChannelGrid() {
+            const grid = document.getElementById('channel-list');
+            grid.innerHTML = "";
+            RSS_SOURCES.forEach(source => {
+                const isChecked = activeChannels.has(source.name);
+                const div = document.createElement('div');
+                div.className = `channel-item ${isChecked ? 'checked' : ''}`;
+                div.onclick = () => toggleChannel(source.name);
+                div.innerHTML = `<div class="indicator"></div><span style="color:${isChecked ? '#fff' : '#666'}">${source.name}</span>`;
+                grid.appendChild(div);
+            });
+        }
+
+        function togglePanel(type) {
+            const bookmarkPanel = document.getElementById('bookmark-panel');
+            const settingsPanel = document.getElementById('settings-panel');
+            
+            if(type === 'bookmark') {
+                settingsPanel.classList.remove('open');
+                bookmarkPanel.classList.toggle('open');
+            } else if(type === 'settings') {
+                bookmarkPanel.classList.remove('open');
+                settingsPanel.classList.toggle('open');
+            }
+        }
+
+        function loadBookmarks() {
+            const saved = localStorage.getItem("my_news_bookmarks");
+            if(saved) {
+                bookmarks = JSON.parse(saved);
+                updateBookmarkCount();
+                renderBookmarks();
+            }
+        }
+
+        function saveBookmark(item) {
+            if(bookmarks.some(b => b.link === item.link)) {
+                bookmarks = bookmarks.filter(b => b.link !== item.link);
+            } else {
+                bookmarks.unshift(item); 
+            }
+            localStorage.setItem("my_news_bookmarks", JSON.stringify(bookmarks));
+            updateBookmarkCount();
+            renderBookmarks();
+            updateStreamStars(item.link);
+        }
+
+        function updateBookmarkCount() {
+            // PC & 모바일 둘 다 업데이트
+            const count = `(${bookmarks.length})`;
+            document.getElementById('bookmark-count-pc').innerText = count;
+            document.getElementById('bookmark-count-mobile').innerText = "북마크 " + count;
+        }
+
+        function renderBookmarks() {
+            const list = document.getElementById('bookmark-list');
+            if(bookmarks.length === 0) {
+                list.innerHTML = '<div class="empty-msg">저장된 기사가 없습니다.<br>기사 옆의 별표(☆)를 눌러보세요.</div>';
+                return;
+            }
+            list.innerHTML = "";
+            bookmarks.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'news-item';
+                div.innerHTML = `
+                    <span class="source-badge" style="background-color: ${item.color}">${item.source}</span>
+                    <a href="${item.link}" target="_blank" class="title-link">${item.title}</a>
+                    <button class="star-btn saved" onclick="removeBookmark('${item.link}')">★</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.removeBookmark = function(link) {
+            bookmarks = bookmarks.filter(b => b.link !== link);
+            localStorage.setItem("my_news_bookmarks", JSON.stringify(bookmarks));
+            updateBookmarkCount();
+            renderBookmarks();
+            updateStreamStars(link); 
+        }
+
+        function updateStreamStars(link) {
+            const stars = document.querySelectorAll(`.star-btn[data-link="${link}"]`);
+            const isSaved = bookmarks.some(b => b.link === link);
+            stars.forEach(btn => {
+                if(isSaved) {
+                    btn.classList.add('saved'); btn.innerText = '★';
+                } else {
+                    btn.classList.remove('saved'); btn.innerText = '☆';
+                }
+            });
+        }
+
+        function clearStream() {
+            document.getElementById('news-stream').innerHTML = "";
+            processedTitles.clear();
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pcBtn = document.getElementById('pause-btn-pc');
+            const mobileBtn = document.getElementById('mobile-pause-btn');
+            const statusMsg = document.getElementById('status-msg');
+            const loader = document.getElementById('loader-icon');
+
+            if(isPaused) {
+                clearInterval(fetchTimer); clearInterval(renderTimer);
+                fetchTimer = null; renderTimer = null;
+                
+                // PC 버튼 업데이트
+                pcBtn.innerHTML = "▶"; pcBtn.classList.add('pause-active');
+                // 모바일 버튼 업데이트
+                mobileBtn.innerHTML = "<i>▶</i><span>재생</span>"; mobileBtn.classList.add('paused');
+                
+                statusMsg.innerText = "⏸ 멈춤: 천천히 읽어보세요.";
+                loader.classList.add('hidden'); 
+            } else {
+                startScheduler();
+                
+                pcBtn.innerHTML = "⏸"; pcBtn.classList.remove('pause-active');
+                mobileBtn.innerHTML = "<i>⏸</i><span>일시정지</span>"; mobileBtn.classList.remove('paused');
+                
+                statusMsg.innerText = "수신 재개...";
+            }
+        }
+
+        function startScheduler() {
+            if(fetchTimer) return;
+            if(newsQueue.length === 0) translateAndQueue();
+            fetchTimer = setInterval(translateAndQueue, 40000); 
+            renderTimer = setInterval(renderTicker, 1000);      
+        }
+
+        function setLoading(isLoading, text) {
+            const loader = document.getElementById('loader-icon');
+            const msg = document.getElementById('status-msg');
+            
+            if(isLoading) {
+                loader.classList.remove('hidden');
+                msg.style.color = "#fff";
+            } else {
+                loader.classList.add('hidden');
+                msg.style.color = "#666";
+            }
+            if(text) msg.innerText = text;
+        }
+
+        async function findBestModel() {
+            setLoading(true, "가성비 모델(Flash) 연결 중...");
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error.message);
+
+                const availableModels = data.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
+                const preferred = availableModels.find(m => m.name.includes("gemini-1.5-flash")) || 
+                                  availableModels.find(m => m.name.includes("gemini-1.0-pro")) ||
+                                  availableModels[0];
+
+                SELECTED_MODEL = preferred.name.replace("models/", "");
+                setLoading(false, `연결됨: ${SELECTED_MODEL}`);
+            } catch (e) {
+                console.error(e);
+                SELECTED_MODEL = "gemini-1.5-flash"; 
+                setLoading(false, "Flash 강제 연결됨");
+            }
+        }
+
+        async function callGeminiDirect(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${SELECTED_MODEL}:generateContent?key=${API_KEY}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || response.statusText);
+            }
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        async function fetchRawRSS() {
+            const targetSources = RSS_SOURCES.filter(s => activeChannels.has(s.name));
+            if(targetSources.length === 0) return [];
+
+            const promises = targetSources.map(async (source) => {
+                try {
+                    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`;
+                    const res = await fetch(api);
+                    const data = await res.json();
+                    if(data.items) return data.items.map(i => ({...i, sourceName: source.name, color: source.color}));
+                    return [];
+                } catch (e) { return []; } 
+            });
+            const results = await Promise.all(promises);
+            return results.flat(); 
+        }
+
+        async function translateAndQueue() {
+            if (!SELECTED_MODEL || isPaused) return; 
+            
+            if(activeChannels.size === 0) {
+                setLoading(false, "선택된 채널이 없습니다.");
+                return;
+            }
+
+            setLoading(true, "다양한 소식 수집 중...");
+            
+            try {
+                const rawItems = await fetchRawRSS();
+                const validItems = rawItems.filter(item => item && item.title);
+                const shuffled = validItems.sort(() => 0.5 - Math.random());
+                const targets = shuffled.filter(item => !processedTitles.has(item.title)).slice(0, 15);
+
+                if (targets.length === 0) {
+                    setLoading(false, "새로운 소식 대기 중...");
+                    return;
+                }
+
+                const titlesToTranslate = targets.map(t => `[${t.sourceName}] ${t.title}`).join("\n");
+                
+                const prompt = `
+                    Translate mixed English/Japanese headlines into intriguing Korean one-liners.
+                    Output JSON array of strings ONLY. No markdown.
+                    
+                    For Comics/Game/Otaku: Fun, enthusiastic tone. Use Korean gamer/subculture terms.
+                    For NFL/Sports: Exciting & Punchy.
+                    For Tech/News: Professional.
+                    
+                    ${titlesToTranslate}
+                `;
+
+                const responseText = await callGeminiDirect(prompt);
+                
+                let translatedTitles = [];
+                try {
+                    const cleanJson = responseText.replace(/```json|```/g, '').trim();
+                    const match = cleanJson.match(/\[.*\]/s); 
+                    if (match) translatedTitles = JSON.parse(match[0]);
+                    else translatedTitles = cleanJson.split('\n').filter(t => t.length > 2);
+                } catch (e) { console.error(e); }
+
+                if (translatedTitles.length > 0) {
+                    translatedTitles.forEach((koreanTitle, index) => {
+                        const originalItem = targets[index];
+                        if(originalItem && originalItem.title) {
+                            newsQueue.push({
+                                source: originalItem.sourceName,
+                                color: originalItem.color,
+                                title: koreanTitle.replace(/"/g, '').replace(/,/g, ''),
+                                link: originalItem.link 
+                            });
+                            processedTitles.add(originalItem.title);
+                        }
+                    });
+                    setLoading(false, "");
+                } 
+            } catch (error) {
+                console.error(error);
+                let errorMsg = "일시적 수신 지연";
+                if(error.message && (error.message.includes('429') || error.message.includes('Quota'))) {
+                    errorMsg = "⚠️ API 한도 초과 (잠시 대기)";
+                }
+                setLoading(true, errorMsg);
+            }
+        }
+
+        function renderTicker() {
+            const streamContainer = document.getElementById('news-stream');
+            if (newsQueue.length === 0) return;
+            
+            const item = newsQueue.shift();
+            const isSaved = bookmarks.some(b => b.link === item.link);
+            const starClass = isSaved ? 'saved' : '';
+            const starIcon = isSaved ? '★' : '☆';
+
+            const div = document.createElement('div');
+            div.className = 'news-item';
+            
+            div.innerHTML = `
+                <span class="source-badge" style="background-color: ${item.color}">${item.source}</span>
+                <a href="${item.link}" target="_blank" class="title-link">${item.title}</a>
+                <button class="star-btn ${starClass}" data-link="${item.link}" onclick='handleStarClick(this)'>${starIcon}</button>
+            `;
+            
+            div.querySelector('.star-btn').itemData = item;
+            streamContainer.insertBefore(div, streamContainer.firstChild);
+
+            if (streamContainer.children.length > 100) {
+                streamContainer.removeChild(streamContainer.lastChild);
+            }
+        }
+
+        window.handleStarClick = function(btn) {
+            const item = btn.itemData;
+            saveBookmark(item);
+        }
+
+        const savedKey = localStorage.getItem("my_gemini_key");
+        if(savedKey) startApp(savedKey);
+
+    </script>
+</body>
+</html>
