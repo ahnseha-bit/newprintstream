@@ -3,69 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knowledge Stream (Stable)</title>
+    <title>Knowledge Stream (Fixed)</title>
     <style>
-        :root { 
-            --bg: #111; 
-            --text: #eee; 
-            --accent: #00ff88; 
-            --star-color: #f1c40f;
-            --border: #222;
-        }
+        :root { --bg: #111; --text: #eee; --accent: #00ff88; --star-color: #f1c40f; --border: #222; }
+        html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard', sans-serif; overflow: hidden; }
+        #app-container { display: flex; flex-direction: column; height: 100vh; max-width: 1000px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; position: relative; }
         
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Pretendard', sans-serif;
-            overflow: hidden; 
-        }
-
-        #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-            box-sizing: border-box;
-            position: relative;
-        }
-        
-        header { 
-            flex: 0 0 60px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #333; 
-            margin-bottom: 10px;
-        }
-        
+        /* 헤더 */
+        header { flex: 0 0 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; margin-bottom: 10px; }
         .header-left { display: flex; gap: 10px; align-items: center; }
         .header-controls { display: flex; gap: 10px; font-size: 0.85rem; align-items: center; }
         .control-btn { color: #888; cursor: pointer; text-decoration: underline; white-space: nowrap; padding: 5px; }
         .control-btn:hover { color: #fff; }
 
-        .btn-pill {
-            background: #222; border: 1px solid #444; padding: 5px 12px;
-            border-radius: 20px; cursor: pointer; font-size: 0.85rem;
-            display: flex; align-items: center; gap: 5px;
-            transition: 0.2s; white-space: nowrap; user-select: none; color: #ccc;
-        }
+        /* 버튼들 */
+        .btn-pill { background: #222; border: 1px solid #444; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; white-space: nowrap; user-select: none; color: #ccc; }
         .btn-pill:hover { background: #333; border-color: #666; color: #fff; }
         .btn-pill.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
-        
+        .btn-pill.pause-active { background: #ff4757; color: white; border-color: #ff4757; }
+
+        /* 로딩/메시지 */
         #status-area { flex: 0 0 auto; min-height: 24px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; }
         #status-msg { color: #888; font-size: 0.9rem; }
-        
-        .loader {
-            width: 16px; height: 16px; border: 2px solid #333; border-bottom-color: var(--accent);
-            border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite;
-        }
+        .loader { width: 16px; height: 16px; border: 2px solid #333; border-bottom-color: var(--accent); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
+        /* 뉴스 스트림 */
         #news-stream { flex: 1 1 auto; overflow-y: scroll; padding-right: 10px; min-height: 0; padding-bottom: 50px; }
         #news-stream::-webkit-scrollbar { width: 10px; }
         #news-stream::-webkit-scrollbar-track { background: #1a1a1a; }
@@ -73,7 +36,6 @@
         
         .news-item { display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 1.2rem; animation: slideIn 0.3s ease-out; transition: background 0.2s; }
         .news-item:hover { background-color: #161616; }
-        
         .source-badge { font-size: 0.7rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; margin-right: 12px; min-width: 70px; text-align: center; color: #000; text-transform: uppercase; margin-top: 3px; flex-shrink: 0; }
         .title-link { flex: 1; color: inherit; text-decoration: none; font-weight: 500; line-height: 1.5; word-break: keep-all; margin-right: 10px; }
         .title-link:hover { text-decoration: underline; color: var(--accent); }
@@ -81,17 +43,17 @@
         .star-btn:hover { color: var(--star-color); transform: scale(1.2); }
         .star-btn.saved { color: var(--star-color); }
 
+        /* 패널 */
         .slide-panel { position: absolute; top: 60px; bottom: 0; right: 0; left: 0; background: rgba(0,0,0,0.96); z-index: 100; padding: 20px; overflow-y: auto; display: none; backdrop-filter: blur(5px); }
         .slide-panel.open { display: block; }
         .panel-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; color: var(--accent); display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        
         .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
         .channel-item { background: #222; border: 1px solid #444; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; user-select: none; }
-        .channel-item:hover { background: #333; }
         .channel-item.checked { border-color: var(--accent); background: #1a2e25; }
         .channel-item .indicator { width: 10px; height: 10px; border-radius: 50%; background: #444; }
         .channel-item.checked .indicator { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
+        /* 로그인 */
         #login-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { text-align: center; width: 90%; max-width: 400px; padding: 20px; }
         input { width: 100%; padding: 15px; margin-top: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
@@ -108,7 +70,7 @@
     <div id="login-layer">
         <div class="login-box">
             <h2 style="margin-bottom: 5px;">Knowledge Stream</h2>
-            <p style="color:#666; font-size:0.9rem; margin-top:0;">Fixed & Stable Edition</p>
+            <p style="color:#666; font-size:0.9rem; margin-top:0;">Final Master Edition</p>
             <input type="password" id="api-input" placeholder="여기에 Gemini API 키를 붙여넣으세요">
             <button class="start-btn" onclick="saveAndStart()">입장하기</button>
             <div class="api-guide">
@@ -158,6 +120,7 @@
     </div>
 
     <script>
+        // RSS 소스 (NFL, 서브컬처, 뉴스 등)
         const RSS_SOURCES = [
             { name: 'Newsarama', url: 'https://www.gamesradar.com/rss/newsarama/', color: '#e056fd' },
             { name: 'CBR', url: 'https://www.cbr.com/feed/', color: '#badc58' },
@@ -187,7 +150,6 @@
         ];
 
         let API_KEY = "";
-        let SELECTED_MODEL = "gemini-1.5-flash"; // 💡 기본값 강제 설정
         let newsQueue = [];
         let processedTitles = new Set();
         let bookmarks = []; 
@@ -196,34 +158,32 @@
         let renderTimer = null;
         let isPaused = false; 
 
-        function saveAndStart() {
+        // 🟢 입장하기 버튼이 호출하는 함수 (최상단 배치)
+        window.saveAndStart = function() {
             const key = document.getElementById('api-input').value.trim();
             if(!key) return alert("키를 입력해주세요!");
             localStorage.setItem("my_gemini_key", key); 
             startApp(key);
-        }
+        };
 
-        function resetKey() {
-            if(confirm("키를 삭제하고 재로그인 하시겠습니까?")) {
+        window.resetKey = function() {
+            if(confirm("저장된 키를 삭제하고 다시 입력하시겠습니까?")) {
                 localStorage.removeItem("my_gemini_key");
                 location.reload();
             }
-        }
+        };
 
-        async function startApp(key) {
+        function startApp(key) {
             API_KEY = key;
             document.getElementById('login-layer').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
             
             loadBookmarks(); 
             initChannelSettings(); 
-            // findBestModel(); <-- 이거 삭제함 (위험함)
-            
-            // 💡 바로 안전한 모델로 시작
-            document.getElementById('header-title').innerText = `MASTER // FLASH`;
             startScheduler();
         }
 
+        // --- 채널 필터 ---
         function initChannelSettings() {
             const savedChannels = localStorage.getItem("my_active_channels");
             if(savedChannels) {
@@ -234,7 +194,7 @@
             renderChannelGrid();
         }
 
-        function toggleChannel(name) {
+        window.toggleChannel = function(name) {
             if(activeChannels.has(name)) activeChannels.delete(name);
             else activeChannels.add(name);
             localStorage.setItem("my_active_channels", JSON.stringify([...activeChannels]));
@@ -248,13 +208,14 @@
                 const isChecked = activeChannels.has(source.name);
                 const div = document.createElement('div');
                 div.className = `channel-item ${isChecked ? 'checked' : ''}`;
-                div.onclick = () => toggleChannel(source.name);
+                div.onclick = () => window.toggleChannel(source.name);
                 div.innerHTML = `<div class="indicator"></div><span style="color:${isChecked ? '#fff' : '#666'}">${source.name}</span>`;
                 grid.appendChild(div);
             });
         }
 
-        function togglePanel(type) {
+        // --- 패널 관리 ---
+        window.togglePanel = function(type) {
             const bookmarkPanel = document.getElementById('bookmark-panel');
             const settingsPanel = document.getElementById('settings-panel');
             if(type === 'bookmark') {
@@ -266,6 +227,7 @@
             }
         }
 
+        // --- 북마크 ---
         function loadBookmarks() {
             const saved = localStorage.getItem("my_news_bookmarks");
             if(saved) {
@@ -323,16 +285,17 @@
             });
         }
 
-        function clearStream() {
+        window.clearStream = function() {
             document.getElementById('news-stream').innerHTML = "";
             processedTitles.clear();
         }
 
-        function togglePause() {
+        // --- 제어 ---
+        window.togglePause = function() {
             isPaused = !isPaused;
             const btn = document.getElementById('pause-btn');
-            const statusMsg = document.getElementById('status-msg');
             const loader = document.getElementById('loader-icon');
+            const msg = document.getElementById('status-msg');
 
             if(isPaused) {
                 clearInterval(fetchTimer);
@@ -341,21 +304,20 @@
                 renderTimer = null;
                 btn.innerHTML = "▶ 다시재생";
                 btn.classList.add('pause-active');
-                statusMsg.innerText = "⏸ 일시정지됨";
+                msg.innerText = "⏸ 일시정지됨";
                 loader.classList.add('hidden'); 
-                document.title = "⏸ 정지됨";
             } else {
                 startScheduler();
                 btn.innerHTML = "⏸ 일시정지";
                 btn.classList.remove('pause-active');
-                statusMsg.innerText = "수신 재개...";
-                document.title = "Knowledge Stream";
+                msg.innerText = "수신 재개...";
             }
         }
 
         function startScheduler() {
             if(fetchTimer) return;
             if(newsQueue.length === 0) translateAndQueue();
+            
             fetchTimer = setInterval(translateAndQueue, 40000); 
             renderTimer = setInterval(renderTicker, 1000);      
             console.log("시스템 가동");
@@ -374,10 +336,10 @@
             if(text) msg.innerText = text;
         }
 
+        // --- AI 통신 ---
         async function callGeminiDirect(prompt) {
-            // 💡 무조건 gemini-1.5-flash만 사용하도록 고정 (에러 원인 차단)
+            // 🚨 안전빵 모델 강제 고정 (Gemini 1.5 Flash)
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -388,4 +350,118 @@
                 throw new Error(errData.error?.message || "API Error");
             }
             const data = await response.json();
-            return
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        async function fetchRawRSS() {
+            const targetSources = RSS_SOURCES.filter(s => activeChannels.has(s.name));
+            if(targetSources.length === 0) return [];
+
+            const promises = targetSources.map(async (source) => {
+                try {
+                    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`;
+                    const res = await fetch(api);
+                    const data = await res.json();
+                    if(data.items) return data.items.map(i => ({...i, sourceName: source.name, color: source.color}));
+                    return [];
+                } catch (e) { return []; } 
+            });
+            const results = await Promise.all(promises);
+            return results.flat(); 
+        }
+
+        async function translateAndQueue() {
+            if (isPaused) return; 
+            
+            if(activeChannels.size === 0) {
+                setLoading(false, "선택된 채널이 없습니다. ⚙ 설정을 확인하세요.");
+                return;
+            }
+
+            setLoading(true, "다양한 소식 수집 중..."); // ✅ 문구 수정됨
+            
+            try {
+                const rawItems = await fetchRawRSS();
+                const validItems = rawItems.filter(item => item && item.title);
+                const shuffled = validItems.sort(() => 0.5 - Math.random());
+                const targets = shuffled.filter(item => !processedTitles.has(item.title)).slice(0, 15);
+
+                if (targets.length === 0) {
+                    setLoading(false, "새로운 소식 대기 중...");
+                    return;
+                }
+
+                const titlesToTranslate = targets.map(t => `[${t.sourceName}] ${t.title}`).join("\n");
+                
+                const prompt = `
+                    Translate mixed English/Japanese headlines into intriguing Korean one-liners.
+                    Output JSON array of strings ONLY. No markdown.
+                    
+                    For Comics/Game/Otaku: Fun, enthusiastic tone. Use Korean gamer/subculture terms.
+                    For NFL/Sports: Exciting & Punchy.
+                    For Tech/News: Professional.
+                    
+                    ${titlesToTranslate}
+                `;
+
+                const responseText = await callGeminiDirect(prompt);
+                
+                let translatedTitles = [];
+                try {
+                    const cleanJson = responseText.replace(/```json|```/g, '').trim();
+                    const match = cleanJson.match(/\[.*\]/s); 
+                    if (match) translatedTitles = JSON.parse(match[0]);
+                    else translatedTitles = cleanJson.split('\n').filter(t => t.length > 2);
+                } catch (e) { console.error(e); }
+
+                if (translatedTitles.length > 0) {
+                    translatedTitles.forEach((koreanTitle, index) => {
+                        const originalItem = targets[index];
+                        if(originalItem && originalItem.title) {
+                            newsQueue.push({
+                                source: originalItem.sourceName,
+                                color: originalItem.color,
+                                title: koreanTitle.replace(/"/g, '').replace(/,/g, ''),
+                                link: originalItem.link 
+                            });
+                            processedTitles.add(originalItem.title);
+                        }
+                    });
+                    setLoading(false, "");
+                } 
+            } catch (error) { 
+                console.error(error);
+                setLoading(false, "일시적 지연 (재시도 중...)");
+            }
+        }
+
+        function renderTicker() {
+            const streamContainer = document.getElementById('news-stream');
+            if (newsQueue.length === 0) return;
+            
+            const item = newsQueue.shift();
+            const isSaved = bookmarks.some(b => b.link === item.link);
+            const starClass = isSaved ? 'saved' : '';
+            const starIcon = isSaved ? '★' : '☆';
+
+            const div = document.createElement('div');
+            div.className = 'news-item';
+            div.innerHTML = `<span class="source-badge" style="background-color: ${item.color}">${item.source}</span><a href="${item.link}" target="_blank" class="title-link">${item.title}</a><button class="star-btn ${starClass}" data-link="${item.link}" onclick='handleStarClick(this)'>${starIcon}</button>`;
+            div.querySelector('.star-btn').itemData = item;
+
+            streamContainer.insertBefore(div, streamContainer.firstChild);
+            if (streamContainer.children.length > 100) streamContainer.removeChild(streamContainer.lastChild);
+        }
+
+        window.handleStarClick = function(btn) {
+            const item = btn.itemData;
+            saveBookmark(item);
+        }
+
+        // 저장된 키 있으면 자동 시작
+        const savedKey = localStorage.getItem("my_gemini_key");
+        if(savedKey) startApp(savedKey);
+
+    </script>
+</body>
+</html>
