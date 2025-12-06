@@ -54,17 +54,13 @@
             letter-spacing: -0.5px; font-family: 'Courier New', monospace;
         }
 
-        /* 🐦 개발자 트위터 링크 */
         .dev-link {
             font-size: 0.75rem; color: #666; text-decoration: none;
             font-family: sans-serif; transition: color 0.2s;
         }
         .dev-link:hover { color: var(--accent); text-decoration: underline; }
         
-        /* PC용 상단 메뉴 */
-        .header-controls { 
-            display: flex; gap: 8px; align-items: center; 
-        }
+        .header-controls { display: flex; gap: 8px; align-items: center; }
         
         .control-btn { 
             color: #888; cursor: pointer; text-decoration: underline; 
@@ -83,9 +79,9 @@
         .btn-pill.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
         .btn-pill.pause-active { background: #ff4757; color: white; border-color: #ff4757; }
 
-        /* --- 하단 네비게이션 (모바일 전용) --- */
+        /* 모바일 네비 */
         .mobile-nav {
-            display: none; /* 기본은 숨김 (PC) */
+            display: none; 
             position: fixed; bottom: 0; left: 0; right: 0;
             height: 65px; background: var(--nav-bg);
             border-top: 1px solid #333;
@@ -102,7 +98,7 @@
         .nav-item.active { color: var(--accent); font-weight: bold; }
         .nav-item.paused { color: #ff4757; }
 
-        /* --- 상태 표시줄 --- */
+        /* 상태창 */
         #status-area {
             flex: 0 0 auto; min-height: 24px; margin-bottom: 10px;
             display: flex; align-items: center; gap: 10px;
@@ -116,7 +112,7 @@
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* --- 뉴스 리스트 --- */
+        /* 뉴스 리스트 */
         #news-stream { 
             flex: 1 1 auto; overflow-y: scroll; 
             padding-right: 5px; min-height: 0; padding-bottom: 20px;
@@ -131,19 +127,16 @@
             font-size: 1.15rem; animation: slideIn 0.3s ease-out; 
             line-height: 1.4;
         }
-        
         .source-badge { 
             font-size: 0.65rem; font-weight: bold; padding: 3px 6px; 
             border-radius: 4px; margin-right: 10px; min-width: 60px; 
             text-align: center; color: #000; text-transform: uppercase;
             margin-top: 4px; flex-shrink: 0;
         }
-        
         .title-link { 
             flex: 1; color: inherit; text-decoration: none; 
             font-weight: 500; word-break: keep-all; margin-right: 8px;
         }
-        
         .star-btn {
             background: none; border: none; color: #444;
             font-size: 1.4rem; cursor: pointer; padding: 0 10px;
@@ -151,7 +144,7 @@
         }
         .star-btn.saved { color: var(--star-color); }
 
-        /* 패널 (설정/북마크) */
+        /* 패널 */
         .slide-panel {
             position: absolute; top: 0; bottom: 0; right: 0; left: 0;
             background: rgba(0,0,0,0.96); z-index: 2000;
@@ -211,6 +204,11 @@
         .login-box { text-align: center; width: 85%; max-width: 400px; padding: 20px; }
         input[type="password"] { width: 100%; padding: 15px; margin-top: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
         button.start-btn { width: 100%; margin-top: 15px; padding: 12px 0; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        
+        /* 💡 No-Key 버튼 추가됨 */
+        button.skip-btn { width: 100%; margin-top: 10px; padding: 12px 0; background: #333; color: #ccc; border: 1px solid #555; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        button.skip-btn:hover { background: #444; color: white; }
+
         .api-guide { margin-top: 25px; font-size: 0.9rem; color: #888; line-height: 1.6; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; }
         .api-guide a { color: var(--accent); text-decoration: none; font-weight: bold; display: block; margin-top: 5px; }
 
@@ -219,7 +217,6 @@
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 📱 모바일 미디어 쿼리 */
         @media (max-width: 768px) {
             .header-controls { display: none; } 
             .mobile-nav { display: flex; } 
@@ -235,8 +232,13 @@
         <div class="login-box">
             <h2 style="margin-bottom: 5px; font-family: 'Courier New', monospace;">newprintstream</h2>
             <p style="color:#666; font-size:0.9rem; margin-top:0;">Real-time Knowledge Ticker</p>
+            
             <input type="password" id="api-input" placeholder="Gemini API Key 입력">
-            <button class="start-btn" onclick="saveAndStart()">입장하기</button>
+            <button class="start-btn" onclick="saveAndStart()">입장하기 (AI 번역)</button>
+            
+            <!-- 🔓 키 없이 입장하는 버튼 -->
+            <button class="skip-btn" onclick="startWithoutKey()">키 없이 입장하기 (원문 모드)</button>
+
             <div class="api-guide">
                 API 키가 없으신가요?<br>
                 구글에서 무료로 발급받을 수 있습니다.
@@ -249,7 +251,7 @@
         <header>
             <div class="header-left">
                 <span class="app-title">newprintstream</span>
-                <!-- 🐦 트위터 링크 유지됨 -->
+                <span id="mode-indicator" style="font-size:0.7rem; color:#666; margin-left:5px;"></span>
                 <a href="https://twitter.com/cancannon" target="_blank" class="dev-link">by @cancannon</a>
             </div>
             <div class="header-controls">
@@ -268,7 +270,6 @@
         
         <div id="news-stream"></div>
 
-        <!-- 📱 모바일 하단 메뉴 -->
         <nav class="mobile-nav">
             <div class="nav-item" onclick="resetKey()">
                 <i>🔑</i>
@@ -348,7 +349,6 @@
         let customChannels = [];
 
         let API_KEY = "";
-        // 🔴 사용자 요청 반영: gemini-2.5-flash로 영구 고정
         let SELECTED_MODEL = "gemini-2.5-flash"; 
         let newsQueue = [];
         let processedTitles = new Set();
@@ -358,14 +358,25 @@
         let renderTimer = null;
         let isPaused = false; 
         
+        // 🚀 No-Key 모드 플래그
+        let isNoKeyMode = false;
+        
         let historyData = [];
 
         function saveAndStart() {
             const key = document.getElementById('api-input').value.trim();
             if(!key) return alert("키를 입력해주세요!");
             localStorage.setItem("my_gemini_key", key); 
+            isNoKeyMode = false;
             startApp(key);
         }
+
+        // 🔓 키 없이 시작하는 함수
+        window.startWithoutKey = function() {
+            isNoKeyMode = true;
+            document.getElementById('mode-indicator').innerText = "(Original Mode)";
+            startApp(null); // 키 없이 시작
+        };
 
         function resetKey() {
             if(confirm("저장된 키를 삭제하고 다시 입력하시겠습니까?")) {
@@ -578,7 +589,6 @@
             if(isPaused) {
                 clearInterval(fetchTimer); clearInterval(renderTimer);
                 fetchTimer = null; renderTimer = null;
-                
                 pcBtn.innerHTML = "▶"; pcBtn.classList.add('pause-active');
                 mobileBtn.innerHTML = "<i>▶</i><span>재생</span>"; mobileBtn.classList.add('paused');
                 statusMsg.innerText = "⏸ 멈춤: 천천히 읽어보세요.";
@@ -647,7 +657,7 @@
             if (isPaused) return; 
             
             if(activeChannels.size === 0) {
-                setLoading(false, "선택된 채널이 없습니다. 채널을 추가하거나 켜주세요.");
+                setLoading(false, "선택된 채널이 없습니다.");
                 return;
             }
 
@@ -664,6 +674,24 @@
                     return;
                 }
 
+                // 🔓 [핵심] 키 없이 입장 시: 번역 건너뛰고 원문 그대로 큐에 추가
+                if (isNoKeyMode) {
+                    targets.forEach(item => {
+                        if(item && item.title) {
+                            newsQueue.push({
+                                source: item.sourceName,
+                                color: item.color,
+                                title: item.title, // 번역 안 된 원문
+                                link: item.link
+                            });
+                            processedTitles.add(item.title);
+                        }
+                    });
+                    setLoading(false, ""); 
+                    return; // AI 호출 안 하고 종료
+                }
+
+                // --- 이하 AI 번역 로직 (키 있을 때만 실행) ---
                 const titlesToTranslate = targets.map(t => `[${t.sourceName}] ${t.title}`).join("\n");
                 
                 const prompt = `
